@@ -1,23 +1,32 @@
 import numpy as np 
 
-
 class MarkovChain :
     """
     The Markov Chain class
     Attributes:
         N: Matrix of transition probabilities.
         P: Matrix of normalized transition probabilities.
-        beggining_character: Character used to indicate the beggining of a word.
-        ending_character: Character used to indicate the end of a word.
+        special_character: Character used to indicate the beggining or end of a word.
     """
-    def __init__(self):
+    def __init__(self, dataset_splited = True):
         """
         Initialize the Markov Chain
         """
-        self.beggining_character = "<S>"
-        self.ending_character = "<E>" 
+        self.special_character = "<S>"
         self.N = None
         self.P = None
+        self.dataset_splited = dataset_splited
+
+    @staticmethod
+    def _split_dataset(dataset):
+        """
+        Split the dataset into a list of words
+        Args:
+            dataset: The dataset to split.
+        Returns:
+            A list of words.
+        """
+        return " ".join(dataset).split()
 
     def compute_probabilities(self, X):
         """
@@ -27,15 +36,17 @@ class MarkovChain :
         Returns:
             N : Matrix of transition probabilities.
         """
+        if not self.dataset_splited:
+            X = self._split_dataset(X)
         characters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
-        characters = [self.beggining_character] + characters + [self.ending_character]    
+        characters =  characters + [self.special_character]    
         #Create a lookup table for the characters
         stoi = {c:i for i,c in enumerate(characters)}
         #Define a matrix of zeros to store frequencies of transitions
         N = np.zeros((len(characters), len(characters)), dtype=np.int32)
         for word in X:
             #Add the beggining character to the beggining of the word, and the ending character to the end of the word
-            extended_word = [self.beggining_character] + list(word) + [self.ending_character]
+            extended_word = [self.special_character] + list(word) + [self.special_character]
             #Here we iterate over the characters of the word, and we update the matrix of frequencies
             for ch1, ch2 in zip(extended_word, extended_word[1:]): 
                 #Get the index of the character in the lookup table
@@ -55,12 +66,13 @@ class MarkovChain :
         Raises:
             ValueError: If the matrix is not normalized.
         """
-        status =  np.allclose(matrix.sum(axis=1), 1.0)
+        matrix_sum = matrix.sum(axis=1)
+        status =  np.allclose(matrix_sum, 1.0)
         if not status:
             raise ValueError("The matrix is not normalized")
         
 
-    def normalize_probabilities(self, N):
+    def normalize_probabilities(self, N, check_normalization=True):
         """
         Normalize the probabilities of the Markov Chain
         Args:
@@ -74,14 +86,16 @@ class MarkovChain :
         #Keep dims is used to keep the dimensions of the array, so braodcasting can be used
         #Divide each row by the sum of the frequencies
         P /= P_sum
-        self._check_normalization(P)
+        if check_normalization:
+            self._check_normalization(P)
         self.P = P
         return P
 
 if __name__ == "__main__":
-    mc = MarkovChain()
-    X = ["hello", "world", "goodbye", "world", "hello", "world",]
+    from utils.read_text import read_text
+    X = read_text("cleaned_tweets.txt","|-|",300)
+    mc = MarkovChain(dataset_splited=False)
     lk = mc.compute_probabilities(X)
-    mc.normalize_probabilities(lk)
+    mc.normalize_probabilities(lk, check_normalization=True)
     print(lk)
     print(mc.P)

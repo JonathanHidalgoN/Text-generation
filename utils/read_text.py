@@ -1,3 +1,16 @@
+from re import sub as resub
+
+def clean_text(text):
+    """
+    Cleans a text by removing special characters and converting to lowercase.
+    Args:
+        text: The text to clean.
+    Returns:
+        A cleaned text.
+    """
+    text = text.lower()
+    text = resub('[^a-zA-Z ]+', '', text)
+    return text
 
 def read_text(filename, delimiter=',', lines_to_return=1000):
     """
@@ -11,7 +24,8 @@ def read_text(filename, delimiter=',', lines_to_return=1000):
     """
     with open(filename, "r") as f:
         text = f.read()
-    return text.split(delimiter)[:lines_to_return]
+    lines_to_return = text.split(delimiter)[:lines_to_return]
+    return list(map(clean_text, lines_to_return))
 
 if __name__ == "__main__":
     X = read_text("cleaned_tweets.txt","|-|",10)
