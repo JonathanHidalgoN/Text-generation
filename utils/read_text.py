@@ -29,5 +29,5 @@ def read_text(filename, delimiter=',', lines_to_return=1000):
     return list(map(clean_text, lines_to_return))
 
 if __name__ == "__main__":
-    text = "@This is a test. This is only a test. @user"
+    text = "@midnight is the best show on @comedycentral. #midnight #comedycentral"
     print(clean_text(text))
