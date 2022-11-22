@@ -21,41 +21,100 @@ from random import shuffle
 from random import randint
 
 def read_tweets(path):
+  """
+  Reads tweets from a file
+  Args:
+    path: path to the file
+  Returns:
+    tweets: list of tweets
+  """
   with open(path, "r") as f:
     text = f.read()
   return text.split("|-|")
 
 def clean_tweet(tweet):
+  """
+  Cleans a tweet
+  Args:
+    tweet: string
+  Returns:
+    tweet: cleaned string
+  """
   new_tweet = sub("\n"," ",tweet)
   new_tweet = sub("'","",new_tweet)
   return new_tweet
 
 def get_tweets(path):
+  """
+  Get tweets from a file to clean them
+  Args:
+    path: path to the file
+  Returns:
+    tweets: list of tweets
+  """
   tweets = read_tweets(path)
   tweets = list(map(clean_tweet,tweets))
   shuffle(tweets)
   return tweets
 
 def find_max_len_tweet(tweets):
+  """
+  Finds the maximum length of a tweet
+  Args:
+    tweets: list of tweets
+  Returns:
+    max_len: maximum length of a tweet
+  """
   max_str = max(tweets, key = len)
   max_len = len(max_str)
   return max_len
 
 def count_words(tweets, returned_vals = 20_000):
+  """
+  Counts the words in a list of tweets
+  Args:
+    tweets: list of tweets
+    returned_vals: number of words to return
+  Returns:
+    freq: dict of words and their frequency
+  """
   freq = Counter((" ".join(tweets)).split(" ")).most_common(returned_vals)
   return freq
 
 def create_token(corpus):
+  """
+  Creates a tokenizer
+  Args:
+    corpus: list of tweets
+  Returns:
+    tokenizer: tokenizer
+  """
   tokenizer = Tokenizer()
   tokenizer.fit_on_texts(corpus)
   return tokenizer
 
 def truncate_tweets(tweets, max_words = 280):
+  """
+  Truncates tweets to a maximum number of words
+  Args:
+    tweets: list of tweets
+    max_words: maximum number of words
+  Returns:
+    tweets: list of tweets
+  """
   truncator = lambda string : string[:max_words + 1]
   truncated_tweets = map(truncator, tweets)
   return truncated_tweets
 
 def encode_tweets(tweets, tokenizer):
+  """
+  Encodes tweets
+  Args:
+    tweets: list of tweets
+    tokenizer: tokenizer
+  Returns:
+    encoded_tweets: list of encoded tweets
+  """
   input_sequences = []
   for tweet in tweets:
     encoded_tweet = tokenizer.texts_to_sequences([tweet])[0]
@@ -65,12 +124,30 @@ def encode_tweets(tweets, tokenizer):
   return input_sequences
 
 def decode_tweet(encoded_tweet, tokenizer):
+  """
+  Decodes an encoded tweet
+  Args:
+    encoded_tweet: encoded tweet
+    tokenizer: tokenizer
+  Returns:
+    decoded_tweet: decoded tweet
+  """
   words_dict = tokenizer.index_word
   full_tweet = encoded_tweet[-1]
   sentence = [words_dict[key] for key in full_tweet]
   return " ".join(sentence)
 
 def generate_train_data(sequences, max_len, total_words):
+  """
+  Generates training data
+  Args:
+    sequences: list of encoded tweets
+    max_len: maximum length of a tweet
+    total_words: number of words in the corpus
+  Returns:
+    ready_data: input data
+    label: output data
+  """
   padded_sequence = np.array(pad_sequences(sequences, 
                                           maxlen=max_len, 
                                           padding='pre'))
@@ -83,7 +160,13 @@ def generate_train_data(sequences, max_len, total_words):
 take_first_element = lambda x : x[0]
 
 def create_model(num_tokens):
-  
+  """
+  Creates a model
+  Args:
+    num_tokens: number of tokens
+  Returns:
+    model: model
+  """
   inputs = Input(shape=(None,), dtype="int64")
   embedded = layers.Embedding(input_dim=num_tokens, output_dim=10)(inputs)
   x = layers.Bidirectional(layers.LSTM(32))(embedded)
@@ -128,9 +211,18 @@ max_len = find_max_len_tweet(tweets)
 #labels[0].shape
 
 model = create_model(total_words)
-model.summary()
+#model.summary()
 
 def take_random_batch(num_tweets, batch_size = 1000):
+  """
+  Takes a random batch of tweets
+  Args:
+    num_tweets: number of tweets
+    batch_size: size of the batch
+  Returns:
+  lower_index: lower index of the batch
+  upper_index: upper index of the batch
+  """
   num_batches = num_tweets // batch_size
   r_n = randint(0,num_batches)
   lower_index = (r_n) * batch_size
@@ -138,7 +230,16 @@ def take_random_batch(num_tweets, batch_size = 1000):
   return lower_index, upper_index
 
 def generate_text(seed_text, next_words, model, max_sequence_len):
-
+    """
+    Generates text
+    Args:
+      seed_text: seed text
+      next_words: number of words to generate
+      model: model
+      max_sequence_len: maximum length of a tweet
+    Returns:
+      output_text: generated text
+    """
     for _ in range(next_words):
         token_list = tokenizer.texts_to_sequences([seed_text])[0]
         token_list = pad_sequences([token_list], maxlen=max_sequence_len-1, padding='pre')
@@ -154,6 +255,16 @@ def generate_text(seed_text, next_words, model, max_sequence_len):
     return seed_text
 
 def train_model(tweets,model, epochs, callbacks = None):
+  """
+  Trains a model
+  Args:
+    tweets: list of tweets
+    model: model
+    epochs: number of epochs
+    callbacks: callbacks
+  Returns:
+    model: trained model
+  """
   num_tweets = len(tweets)
   for _ in range(epochs):
     lower_index, upper_index = take_random_batch(num_tweets)
