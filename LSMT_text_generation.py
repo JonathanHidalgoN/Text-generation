@@ -8,54 +8,17 @@ Original file is located at
 """
 
 import numpy as np
-from re import sub
 from random import shuffle
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras import layers
 from tensorflow.keras import utils as ku
 from tensorflow.keras import Input, Model
 from collections import Counter
 from random import shuffle
 from random import randint
+from utils.read_text import read_text
 
-def read_tweets(path):
-  """
-  Reads tweets from a file
-  Args:
-    path: path to the file
-  Returns:
-    tweets: list of tweets
-  """
-  with open(path, "r") as f:
-    text = f.read()
-  return text.split("|-|")
-
-def clean_tweet(tweet):
-  """
-  Cleans a tweet
-  Args:
-    tweet: string
-  Returns:
-    tweet: cleaned string
-  """
-  new_tweet = sub("\n"," ",tweet)
-  new_tweet = sub("'","",new_tweet)
-  return new_tweet
-
-def get_tweets(path):
-  """
-  Get tweets from a file to clean them
-  Args:
-    path: path to the file
-  Returns:
-    tweets: list of tweets
-  """
-  tweets = read_tweets(path)
-  tweets = list(map(clean_tweet,tweets))
-  shuffle(tweets)
-  return tweets
 
 def find_max_len_tweet(tweets):
   """
@@ -179,7 +142,7 @@ def create_model(num_tokens):
   return model
 
 path = "/content/cleaned_tweets.txt"
-tweets = get_tweets(path)
+tweets = read_text(path, 160_000, delimiter =  "|-|")
 #Important to shuffle
 shuffle(tweets)
 total_words = 12_000
@@ -278,3 +241,4 @@ def train_model(tweets,model, epochs, callbacks = None):
 
 
 
+  
