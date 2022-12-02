@@ -9,7 +9,8 @@ def clean_text(text):
         A cleaned text.
     """
     text = text.lower()
-    text = resub('[^a-zA-Z ]+', '', text)
+    text_filter = "(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)"
+    text = resub(text_filter," ",text)
     return text
 
 def read_text(filename, delimiter=',', lines_to_return=1000):
@@ -28,6 +29,5 @@ def read_text(filename, delimiter=',', lines_to_return=1000):
     return list(map(clean_text, lines_to_return))
 
 if __name__ == "__main__":
-    X = read_text("cleaned_tweets.txt","|-|",10)
-    print(X)
-    
+    text = "@midnight is the best show on @comedycentral. #midnight #comedycentral"
+    print(clean_text(text))
